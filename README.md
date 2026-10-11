@@ -4,7 +4,7 @@ Juegos de navegador auto-contenidos (un `index.html` por juego, sin dependencias
 Font Awesome por CDN). Se juega **contra el PC, como en los viejos tiempos**, o a
 2 jugadores en local donde aplica. Textos en **ES · EN · JA** con selector integrado.
 
-> Part of [jgarvidsson.dev](https://www.jgarvidsson.dev) · paleta sobria, sin saturar.
+> Part of [jgarvidsson.dev](https://www.jgarvidsson.dev).
 
 ## Juegos
 
