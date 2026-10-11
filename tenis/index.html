@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎾 Tenis · Campo de Gibraltar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(145deg, #1a2a1a 0%, #2a4a2a 100%);
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: 12px;
+            margin: 0;
+        }
+
+        .game-container {
+            background: rgba(30, 50, 30, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 40px;
+            padding: 20px 18px 24px;
+            max-width: 580px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+        }
+
+        .game-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #d8e8d8;
+            font-weight: 400;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        .game-title i {
+            font-size: 1.6rem;
+            color: #f0d050;
+        }
+
+        .game-title h1 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .score-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 14px 5px 16px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .score-box {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #c0d8c0;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .score-box i {
+            font-size: 1rem;
+        }
+
+        .score-box .score-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .score-divider {
+            color: #4a6a4a;
+            font-weight: 300;
+        }
+
+        .reset-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: #c0d8c0;
+            font-size: 1.2rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.02);
+        }
+
+        .reset-btn:active {
+            transform: scale(0.92);
+        }
+
+        .canvas-wrapper {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 28px;
+            padding: 10px;
+            box-shadow: inset 0 6px 12px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 4 / 3;
+            background: #1a3a1a;
+            border-radius: 16px;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+            touch-action: none;
+            cursor: pointer;
+        }
+
+        .status-message {
+            text-align: center;
+            margin: 8px 0 4px;
+            font-size: 0.9rem;
+            color: #a0c0a0;
+            min-height: 24px;
+            letter-spacing: 0.3px;
+            opacity: 0.8;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .touch-controls {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            max-width: 260px;
+            margin: 8px auto 2px;
+        }
+
+        .touch-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #b0d0b0;
+            font-size: 1rem;
+            padding: 8px 0;
+            border-radius: 16px;
+            backdrop-filter: blur(4px);
+            cursor: pointer;
+            transition: 0.12s;
+            touch-action: manipulation;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .touch-btn:active {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(0.92);
+        }
+
+        .touch-btn.wide {
+            grid-column: span 2;
+        }
+
+        .touch-btn i {
+            pointer-events: none;
+        }
+
+        .diff-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #a0c0a0;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        .diff-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .diff-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .diff-btn:active {
+            transform: scale(0.94);
+        }
+
+        .mode-group {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #a0c0a0;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .mode-btn:active {
+            transform: scale(0.94);
+        }
+
+        @media (max-width: 480px) {
+            .game-container { padding: 14px 10px 18px; }
+            .canvas-wrapper { padding: 6px; }
+            .touch-btn { font-size: 0.8rem; min-height: 34px; padding: 4px 0; }
+            .touch-controls { max-width: 200px; gap: 4px; }
+            .game-title h1 { font-size: 1.1rem; }
+            .score-box { font-size: 0.8rem; }
+        }
+
+        @media (max-width: 380px) {
+            .touch-controls { max-width: 160px; }
+            .touch-btn { font-size: 0.7rem; min-height: 28px; }
+            .diff-btn, .mode-btn { font-size: 0.6rem; padding: 3px 10px; }
+        }
+
+        .game-over-msg {
+            color: #ffb0a0;
+        }
+        .game-win-msg {
+            color: #b0f0b0;
+        }
+    </style>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<div class="game-container" id="app">
+    <div class="game-header">
+        <div class="game-title">
+            <i class="fas fa-table-tennis"></i>
+            <h1 data-i18n="title">Tenis</h1>
+        </div>
+        <div class="score-area">
+            <span class="score-box"><i class="fas fa-user"></i> <span class="score-value" id="player1Score">0</span></span>
+            <span class="score-divider">|</span>
+            <span class="score-box"><i class="fas fa-circle"></i> <span class="score-value" id="player2Score">0</span></span>
+            <button class="reset-btn" id="resetBtn" data-i18n-aria="restart" aria-label="Reiniciar">
+                <i class="fas fa-rotate-right" id="faceIcon"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="canvas-wrapper">
+        <canvas id="gameCanvas" width="400" height="300"></canvas>
+    </div>
+
+    <div id="statusMessage" class="status-message">
+        <i class="fas fa-arrow-up"></i> <span data-i18n="controlsHint">W/S � Flechas � Toque</span>
+    </div>
+
+    <!-- Controles táctiles -->
+    <div class="touch-controls" id="touchControls">
+        <div class="touch-btn" data-action="up1"><i class="fas fa-arrow-up"></i> <span style="font-size:0.6rem;">P1</span></div>
+        <div class="touch-btn" data-action="down1"><i class="fas fa-arrow-down"></i> <span style="font-size:0.6rem;">P1</span></div>
+        <div class="touch-btn" data-action="up2"><i class="fas fa-arrow-up"></i> <span style="font-size:0.6rem;">P2</span></div>
+        <div class="touch-btn" data-action="down2"><i class="fas fa-arrow-down"></i> <span style="font-size:0.6rem;">P2</span></div>
+    </div>
+
+    <div class="controls">
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            <div class="mode-group">
+                <button class="mode-btn active" data-mode="1p" data-i18n="onePlayer">1 Jugador</button>
+                <button class="mode-btn" data-mode="2p" data-i18n="twoPlayers">2 Jugadores</button>
+            </div>
+            <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                <button class="diff-btn active" data-speed="3" data-i18n="easy">F�cil</button>
+                <button class="diff-btn" data-speed="4.5" data-i18n="medium">Medio</button>
+                <button class="diff-btn" data-speed="7" data-i18n="hard">Dif�cil</button>
+            </div>
+        </div>
+        <span style="color: #4a7a4a; font-size: 0.65rem; opacity: 0.6;">
+            <i class="fas fa-arrow-pointer"></i> <span data-i18n="tapHint">Click / toque</span>
+        </span>
+    </div>
+</div>
+
+<script src="../_shared/game-lang.js"></script><script>
+    (function() {
+        // ---------- CONFIGURACIÓN ----------
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const W = 400, H = 300;
+
+        // Estado del juego
+        let player1 = { x: 10, y: H/2 - 30, w: 8, h: 60, dy: 0, score: 0 };
+        let player2 = { x: W - 18, y: H/2 - 30, w: 8, h: 60, dy: 0, score: 0 };
+        let ball = { x: W/2, y: H/2, radius: 5, dx: 2.5, dy: 1.8, speed: 3.5 };
+
+        let gameMode = '1p'; // '1p' o '2p'
+        let pcSpeed = 3; // velocidad de la pala del PC
+        let gameRunning = false;
+        let gameOver = false;
+        let winScore = 5;
+        let animationId = null;
+        let keys = { w: false, s: false, arrowup: false, arrowdown: false };
+
+        // DOM
+        const p1ScoreEl = document.getElementById('player1Score');
+        const p2ScoreEl = document.getElementById('player2Score');
+        const statusMsg = document.getElementById('statusMessage');
+        const resetBtn = document.getElementById('resetBtn');
+        const faceIcon = document.getElementById('faceIcon');
+
+        // Estado visible (re-render al cambiar ES/EN/JA)
+        let lastStatus = 'controlsHint';
+
+        function renderStatus() {
+            if (lastStatus === 'playing') {
+                statusMsg.innerHTML = '<i class="fas fa-play"></i> ' + GameLang.t('playing');
+            } else if (lastStatus === 'p1wins') {
+                statusMsg.innerHTML = '<i class="fas fa-trophy"></i> ' + GameLang.t('p1wins');
+            } else if (lastStatus === 'p2wins') {
+                statusMsg.innerHTML = '<i class="fas fa-trophy"></i> ' + GameLang.t('p2wins');
+            } else {
+                statusMsg.innerHTML = '<i class="fas fa-arrow-up"></i> ' + GameLang.t('controlsHint');
+            }
+        }
+
+        // ---------- INICIALIZACIÓN ----------
+        function resetGame() {
+            player1.score = 0;
+            player2.score = 0;
+            player1.y = H/2 - 30;
+            player2.y = H/2 - 30;
+            ball.x = W/2;
+            ball.y = H/2;
+            ball.dx = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
+            ball.dy = (Math.random() * 2 - 1) * ball.speed * 0.6;
+            gameOver = false;
+            gameRunning = true;
+            updateScoreDisplay();
+            lastStatus = 'playing';
+            renderStatus();
+            faceIcon.className = 'fas fa-rotate-right';
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            gameLoop();
+        }
+
+        // ---------- ACTUALIZAR PUNTUACIÓN ----------
+        function updateScoreDisplay() {
+            p1ScoreEl.textContent = player1.score;
+            p2ScoreEl.textContent = player2.score;
+        }
+
+        // ---------- FÍSICA Y MOVIMIENTO ----------
+        function update() {
+            if (gameOver || !gameRunning) return;
+
+            // Movimiento jugadores (teclado)
+            if (keys.w && player1.y > 0) player1.y -= 4;
+            if (keys.s && player1.y < H - player1.h) player1.y += 4;
+
+            if (gameMode === '2p') {
+                if (keys.arrowup && player2.y > 0) player2.y -= 4;
+                if (keys.arrowdown && player2.y < H - player2.h) player2.y += 4;
+            }
+
+            // Pala del PC (modo 1 jugador)
+            if (gameMode === '1p') {
+                const targetY = ball.y - player2.h/2;
+                const diff = targetY - player2.y;
+                const moveSpeed = pcSpeed;
+                if (Math.abs(diff) > 4) {
+                    if (diff > 0) player2.y += moveSpeed;
+                    else player2.y -= moveSpeed;
+                }
+                // Limitar dentro del canvas
+                player2.y = Math.max(0, Math.min(H - player2.h, player2.y));
+            }
+
+            // Movimiento de la pelota
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Colisión con paredes superior/inferior
+            if (ball.y - ball.radius <= 0 || ball.y + ball.radius >= H) {
+                ball.dy *= -1;
+            }
+
+            // Colisión con jugador 1
+            if (ball.dx < 0 &&
+                ball.x - ball.radius <= player1.x + player1.w &&
+                ball.x + ball.radius >= player1.x &&
+                ball.y >= player1.y && ball.y <= player1.y + player1.h) {
+                // Rebote
+                const collideY = ball.y - (player1.y + player1.h/2);
+                const normalizedY = collideY / (player1.h/2);
+                const angle = normalizedY * 0.8; // -0.8 a 0.8 rad
+                const speed = Math.sqrt(ball.dx*ball.dx + ball.dy*ball.dy);
+                ball.dx = Math.cos(angle) * speed;
+                ball.dy = Math.sin(angle) * speed;
+                // Asegurar que vaya hacia la derecha
+                ball.dx = Math.abs(ball.dx);
+                // Aumentar velocidad ligeramente
+                const newSpeed = Math.sqrt(ball.dx*ball.dx + ball.dy*ball.dy);
+                if (newSpeed < 6) {
+                    const factor = 1.04;
+                    ball.dx *= factor;
+                    ball.dy *= factor;
+                }
+                ball.x = player1.x + player1.w + ball.radius;
+            }
+
+            // Colisión con jugador 2
+            if (ball.dx > 0 &&
+                ball.x + ball.radius >= player2.x &&
+                ball.x - ball.radius <= player2.x + player2.w &&
+                ball.y >= player2.y && ball.y <= player2.y + player2.h) {
+                const collideY = ball.y - (player2.y + player2.h/2);
+                const normalizedY = collideY / (player2.h/2);
+                const angle = normalizedY * 0.8;
+                const speed = Math.sqrt(ball.dx*ball.dx + ball.dy*ball.dy);
+                ball.dx = -Math.cos(angle) * speed;
+                ball.dy = Math.sin(angle) * speed;
+                ball.dx = -Math.abs(ball.dx);
+                const newSpeed = Math.sqrt(ball.dx*ball.dx + ball.dy*ball.dy);
+                if (newSpeed < 6) {
+                    const factor = 1.04;
+                    ball.dx *= factor;
+                    ball.dy *= factor;
+                }
+                ball.x = player2.x - ball.radius;
+            }
+
+            // Punto para jugador 1 (pelota sale por la derecha)
+            if (ball.x - ball.radius > W) {
+                player1.score++;
+                updateScoreDisplay();
+                resetBall();
+                checkWin();
+            }
+
+            // Punto para jugador 2 (pelota sale por la izquierda)
+            if (ball.x + ball.radius < 0) {
+                player2.score++;
+                updateScoreDisplay();
+                resetBall();
+                checkWin();
+            }
+
+            // Limitar velocidad
+            const spd = Math.sqrt(ball.dx*ball.dx + ball.dy*ball.dy);
+            if (spd > 8) {
+                ball.dx = (ball.dx / spd) * 8;
+                ball.dy = (ball.dy / spd) * 8;
+            }
+        }
+
+        function resetBall() {
+            ball.x = W/2;
+            ball.y = H/2 + (Math.random() * 40 - 20);
+            const angle = (Math.random() * 0.8 - 0.4);
+            const baseSpeed = ball.speed;
+            const dir = Math.random() > 0.5 ? 1 : -1;
+            ball.dx = dir * baseSpeed * Math.cos(angle);
+            ball.dy = baseSpeed * Math.sin(angle);
+        }
+
+        function checkWin() {
+            if (player1.score >= winScore) {
+                gameOver = true;
+                gameRunning = false;
+                lastStatus = 'p1wins';
+                renderStatus();
+                faceIcon.className = 'fas fa-star';
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                draw();
+                return true;
+            } else if (player2.score >= winScore) {
+                gameOver = true;
+                gameRunning = false;
+                lastStatus = 'p2wins';
+                renderStatus();
+                faceIcon.className = 'fas fa-star';
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                draw();
+                return true;
+            }
+            return false;
+        }
+
+        // ---------- DIBUJADO ----------
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            // Fondo
+            const gradient = ctx.createLinearGradient(0, 0, 0, H);
+            gradient.addColorStop(0, '#1a4a1a');
+            gradient.addColorStop(0.5, '#2a5a2a');
+            gradient.addColorStop(1, '#1a4a1a');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, W, H);
+
+            // Línea central
+            ctx.setLineDash([6, 8]);
+            ctx.strokeStyle = 'rgba(100, 180, 100, 0.3)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(W/2, 0);
+            ctx.lineTo(W/2, H);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Círculo central
+            ctx.beginPath();
+            ctx.arc(W/2, H/2, 30, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(100, 180, 100, 0.2)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Puntuación en la cancha
+            ctx.fillStyle = 'rgba(150, 220, 150, 0.15)';
+            ctx.font = 'bold 28px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(player1.score, W/2 - 50, 12);
+            ctx.fillText(player2.score, W/2 + 50, 12);
+
+            // Jugador 1
+            ctx.fillStyle = '#7fdb9a';
+            ctx.shadowColor = '#7fdb9a';
+            ctx.shadowBlur = 12;
+            ctx.fillRect(player1.x, player1.y, player1.w, player1.h);
+            ctx.shadowBlur = 0;
+
+            // Jugador 2
+            ctx.fillStyle = '#f0a030';
+            ctx.shadowColor = '#f0a030';
+            ctx.shadowBlur = 12;
+            ctx.fillRect(player2.x, player2.y, player2.w, player2.h);
+            ctx.shadowBlur = 0;
+
+            // Pelota
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 16;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Borde
+            ctx.strokeStyle = 'rgba(100, 180, 100, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(0, 0, W, H);
+        }
+
+        // ---------- BUCLE PRINCIPAL ----------
+        function gameLoop() {
+            if (!gameRunning && gameOver) {
+                draw();
+                return;
+            }
+            update();
+            draw();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // ---------- CAMBIAR DIFICULTAD / MODO ----------
+        function setDifficulty(speed) {
+            pcSpeed = speed;
+            document.querySelectorAll('.diff-btn').forEach(btn => {
+                btn.classList.toggle('active', parseFloat(btn.dataset.speed) === speed);
+            });
+            resetGame();
+        }
+
+        function setMode(mode) {
+            gameMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+            // Resetear teclas
+            keys.arrowup = false;
+            keys.arrowdown = false;
+            resetGame();
+        }
+
+        // ---------- EVENTOS ----------
+        document.addEventListener('DOMContentLoaded', () => {
+            GameLang.init({
+                es: {
+                    title: 'Tenis', restart: 'Reiniciar',
+                    onePlayer: '1 Jugador', twoPlayers: '2 Jugadores',
+                    easy: 'Fácil', medium: 'Medio', hard: 'Difícil',
+                    tapHint: 'Click / toque',
+                    controlsHint: 'W/S · Flechas · Toque',
+                    playing: 'Juego en curso',
+                    p1wins: '¡Jugador 1 gana! 🎉', p2wins: '¡Jugador 2 gana! 🎉'
+                },
+                en: {
+                    title: 'Tennis', restart: 'Restart',
+                    onePlayer: '1 Player', twoPlayers: '2 Players',
+                    easy: 'Easy', medium: 'Medium', hard: 'Hard',
+                    tapHint: 'Click / tap',
+                    controlsHint: 'W/S · Arrows · Tap',
+                    playing: 'Game on',
+                    p1wins: 'Player 1 wins! 🎉', p2wins: 'Player 2 wins! 🎉'
+                },
+                ja: {
+                    title: 'テニス', restart: 'リスタート',
+                    onePlayer: '1人', twoPlayers: '2人',
+                    easy: 'かんたん', medium: 'ふつう', hard: 'むずかしい',
+                    tapHint: 'クリック／タップ',
+                    controlsHint: 'W/S・矢印キー・タップ',
+                    playing: '試合中',
+                    p1wins: 'プレイヤー1の勝ち！🎉', p2wins: 'プレイヤー2の勝ち！🎉'
+                }
+            });
+            GameLang.onChange = () => {
+                document.title = GameLang.t('title') + ' · Campo de Gibraltar';
+                renderStatus();
+            };
+            document.title = GameLang.t('title') + ' · Campo de Gibraltar';
+            resetGame();
+
+            // Teclado
+            document.addEventListener('keydown', (e) => {
+                const key = e.key.toLowerCase();
+                if (key === 'w') { keys.w = true; e.preventDefault(); }
+                if (key === 's') { keys.s = true; e.preventDefault(); }
+                if (key === 'arrowup') { keys.arrowup = true; e.preventDefault(); }
+                if (key === 'arrowdown') { keys.arrowdown = true; e.preventDefault(); }
+                if (key === 'r' || key === 'R') { resetGame(); e.preventDefault(); }
+                if (key === ' ') { e.preventDefault(); }
+            });
+
+            document.addEventListener('keyup', (e) => {
+                const key = e.key.toLowerCase();
+                if (key === 'w') { keys.w = false; e.preventDefault(); }
+                if (key === 's') { keys.s = false; e.preventDefault(); }
+                if (key === 'arrowup') { keys.arrowup = false; e.preventDefault(); }
+                if (key === 'arrowdown') { keys.arrowdown = false; e.preventDefault(); }
+            });
+
+            // Reset
+            resetBtn.addEventListener('click', resetGame);
+
+            // Dificultad
+            document.querySelectorAll('.diff-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const speed = parseFloat(btn.dataset.speed);
+                    setDifficulty(speed);
+                });
+            });
+
+            // Modo
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const mode = btn.dataset.mode;
+                    setMode(mode);
+                });
+            });
+
+            // Controles táctiles
+            document.querySelectorAll('.touch-btn[data-action]').forEach(btn => {
+                const action = btn.dataset.action;
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleTouchAction(action, true);
+                }, { passive: false });
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleTouchAction(action, false);
+                }, { passive: false });
+                btn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    handleTouchAction(action, true);
+                });
+                btn.addEventListener('mouseup', (e) => {
+                    e.preventDefault();
+                    handleTouchAction(action, false);
+                });
+            });
+
+            function handleTouchAction(action, pressed) {
+                if (action === 'up1') keys.w = pressed;
+                if (action === 'down1') keys.s = pressed;
+                if (action === 'up2') keys.arrowup = pressed;
+                if (action === 'down2') keys.arrowdown = pressed;
+            }
+
+            // Control táctil en el canvas (mover con el dedo)
+            let touchActive = false;
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                const y = (touch.clientY - rect.top) / rect.height * H;
+                if (gameMode === '2p') {
+                    // Mitad izquierda = P1, mitad derecha = P2
+                    const x = (touch.clientX - rect.left) / rect.width * W;
+                    if (x < W/2) {
+                        player1.y = Math.max(0, Math.min(H - player1.h, y - player1.h/2));
+                    } else {
+                        player2.y = Math.max(0, Math.min(H - player2.h, y - player2.h/2));
+                    }
+                } else {
+                    player1.y = Math.max(0, Math.min(H - player1.h, y - player1.h/2));
+                }
+                touchActive = true;
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (!touchActive) return;
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                const y = (touch.clientY - rect.top) / rect.height * H;
+                if (gameMode === '2p') {
+                    const x = (touch.clientX - rect.left) / rect.width * W;
+                    if (x < W/2) {
+                        player1.y = Math.max(0, Math.min(H - player1.h, y - player1.h/2));
+                    } else {
+                        player2.y = Math.max(0, Math.min(H - player2.h, y - player2.h/2));
+                    }
+                } else {
+                    player1.y = Math.max(0, Math.min(H - player1.h, y - player1.h/2));
+                }
+            }, { passive: false });
+
+            canvas.addEventListener('touchend', (e) => {
+                touchActive = false;
+            }, { passive: false });
+
+            // Click en canvas (modo 1 jugador)
+            canvas.addEventListener('mousemove', (e) => {
+                if (gameMode === '1p') {
+                    const rect = canvas.getBoundingClientRect();
+                    const y = (e.clientY - rect.top) / rect.height * H;
+                    if (y >= 0 && y <= H) {
+                        player1.y = Math.max(0, Math.min(H - player1.h, y - player1.h/2));
+                    }
+                }
+            });
+
+            canvas.addEventListener('click', (e) => {
+                if (gameOver) resetGame();
+            });
+
+            // Prevenir contexto
+            canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        });
+
+    })();
+</script>
+</body>
+</html>

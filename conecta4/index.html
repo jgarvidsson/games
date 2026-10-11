@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🔴 Conecta 4 · Campo de Gibraltar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(145deg, #0a1a2a 0%, #1a3a5a 100%);
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: 12px;
+            margin: 0;
+        }
+
+        .game-container {
+            background: rgba(20, 40, 60, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 40px;
+            padding: 20px 18px 24px;
+            max-width: 560px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+        }
+
+        .game-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #d0e0e8;
+            font-weight: 400;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        .game-title i {
+            font-size: 1.6rem;
+            color: #f0a040;
+        }
+
+        .game-title h1 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .score-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 14px 5px 16px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .score-box {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #b0c8d8;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .score-box i {
+            font-size: 1rem;
+        }
+
+        .score-box .score-value {
+            font-weight: 700;
+            font-size: 1rem;
+            min-width: 16px;
+            text-align: center;
+        }
+
+        .reset-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: #b0c8d8;
+            font-size: 1.2rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.02);
+        }
+
+        .reset-btn:active {
+            transform: scale(0.92);
+        }
+
+        .board-wrapper {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 28px;
+            padding: 14px;
+            box-shadow: inset 0 6px 12px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            width: 100%;
+            max-width: 420px;
+            aspect-ratio: 7 / 6;
+            background: #1a3a5a;
+            border-radius: 16px;
+            padding: 10px;
+        }
+
+        .cell {
+            aspect-ratio: 1 / 1;
+            background: rgba(10, 30, 50, 0.6);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.15s;
+            border: 2px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .cell:hover:not(.taken) {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .cell.taken {
+            cursor: default;
+        }
+
+        .cell.red {
+            background: radial-gradient(circle at 35% 35%, #ff6a6a, #cc2233);
+            box-shadow: inset -4px -4px 8px rgba(0,0,0,0.3), inset 4px 4px 8px rgba(255,255,255,0.15);
+            border-color: #cc2233;
+        }
+
+        .cell.yellow {
+            background: radial-gradient(circle at 35% 35%, #ffdd44, #e8a820);
+            box-shadow: inset -4px -4px 8px rgba(0,0,0,0.3), inset 4px 4px 8px rgba(255,255,255,0.15);
+            border-color: #e8a820;
+        }
+
+        .cell.win-cell {
+            animation: pulse-win 0.6s infinite alternate;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes pulse-win {
+            0% { transform: scale(0.95); }
+            100% { transform: scale(1.05); }
+        }
+
+        .status-message {
+            text-align: center;
+            margin: 10px 0 6px;
+            font-size: 0.95rem;
+            color: #b0c8d8;
+            min-height: 28px;
+            letter-spacing: 0.3px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .mode-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #b0c8d8;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .mode-btn:active {
+            transform: scale(0.94);
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #8aacb8;
+            font-size: 0.8rem;
+        }
+
+        .status-badge i {
+            font-size: 1rem;
+        }
+
+        .status-badge .badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .badge-dot.active {
+            background: #5ac87a;
+            box-shadow: 0 0 8px rgba(90, 200, 122, 0.3);
+        }
+
+        .badge-dot.waiting {
+            background: #c8a040;
+            box-shadow: 0 0 8px rgba(200, 160, 64, 0.3);
+            animation: pulse-dot 1s infinite;
+        }
+
+        .badge-dot.red {
+            background: #ff4a4a;
+            box-shadow: 0 0 8px rgba(255, 74, 74, 0.3);
+        }
+
+        .badge-dot.yellow {
+            background: #f0c040;
+            box-shadow: 0 0 8px rgba(240, 192, 64, 0.3);
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        @media (max-width: 480px) {
+            .game-container { padding: 14px 10px 18px; }
+            .board-wrapper { padding: 10px; }
+            .board { gap: 4px; padding: 6px; max-width: 320px; }
+            .game-title h1 { font-size: 1.1rem; }
+            .score-box { font-size: 0.8rem; }
+        }
+
+        @media (max-width: 380px) {
+            .board { gap: 3px; padding: 4px; max-width: 260px; }
+            .mode-btn { font-size: 0.65rem; padding: 3px 10px; }
+        }
+    </style>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<div class="game-container" id="app">
+    <div class="game-header">
+        <div class="game-title">
+            <i class="fas fa-circle" style="color:#ff4a4a;"></i>
+            <h1 data-i18n="title">Conecta 4</h1>
+        </div>
+        <div class="score-area">
+            <span class="score-box"><i class="fas fa-circle" style="color:#ff4a4a;"></i> <span class="score-value" id="redScore">0</span></span>
+            <span class="score-divider" style="color:#4a6a7a;">|</span>
+            <span class="score-box"><i class="fas fa-circle" style="color:#f0c040;"></i> <span class="score-value" id="yellowScore">0</span></span>
+            <button class="reset-btn" id="resetBtn" aria-label="Reiniciar">
+                <i class="fas fa-rotate-right" id="faceIcon"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="board-wrapper">
+        <div class="board" id="board"></div>
+    </div>
+
+    <div id="statusMessage" class="status-message">
+        <i class="fas fa-play"></i> Turno de <strong>🔴 Rojo</strong>
+    </div>
+
+    <div class="controls">
+        <div class="mode-group">
+            <button class="mode-btn active" data-mode="1p" data-i18n="onePlayer">1 Jugador</button>
+            <button class="mode-btn" data-mode="2p" data-i18n="twoPlayers">2 Jugadores</button>
+        </div>
+        <div class="status-badge">
+            <span class="badge-dot active" id="statusDot"></span>
+            <span id="statusText">Listo</span>
+        </div>
+    </div>
+</div>
+
+<script src="../_shared/game-lang.js"></script>
+<script>
+    (function() {
+        // ---------- CONFIGURACIÓN ----------
+        const ROWS = 6;
+        const COLS = 7;
+        const EMPTY = null;
+        const RED = 'red';
+        const YELLOW = 'yellow';
+
+        // DOM
+        const boardEl = document.getElementById('board');
+        const statusMsg = document.getElementById('statusMessage');
+        const resetBtn = document.getElementById('resetBtn');
+        const faceIcon = document.getElementById('faceIcon');
+        const redScoreEl = document.getElementById('redScore');
+        const yellowScoreEl = document.getElementById('yellowScore');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+
+        // Estado del juego
+        let board = [];
+        let currentPlayer = RED;
+        let gameActive = false;
+        let gameMode = '1p';
+        let scores = { red: 0, yellow: 0 };
+        let winCells = [];
+
+        // ---------- INICIALIZACIÓN ----------
+        function initGame() {
+            board = Array.from({ length: ROWS }, () => Array(COLS).fill(EMPTY));
+            currentPlayer = RED;
+            gameActive = true;
+            winCells = [];
+            renderBoard();
+            updateStatus();
+            updateBadge();
+            faceIcon.className = 'fas fa-rotate-right';
+        }
+
+        function resetScores() {
+            scores = { red: 0, yellow: 0 };
+            updateScores();
+            initGame();
+        }
+
+        function updateScores() {
+            redScoreEl.textContent = scores.red;
+            yellowScoreEl.textContent = scores.yellow;
+        }
+
+        function playerTag(p) {
+            const emoji = p === RED ? '🔴' : '🟡';
+            const name = p === RED ? GameLang.t('redName') : GameLang.t('yellowName');
+            return `${emoji} ${name}`;
+        }
+
+        // Mensaje + insignia (re-render al cambiar ES/EN/JA)
+        let lastMsg = { k: 'turn', player: RED };
+        let lastBadge = 'ready';
+
+        function renderMsg() {
+            const m = lastMsg;
+            if (m.k === 'win') {
+                statusMsg.innerHTML = `<i class="fas fa-trophy"></i> ` + GameLang.t('winMsg').replace('{t}', `<strong>${playerTag(m.player)}</strong>`);
+            } else if (m.k === 'draw') {
+                statusMsg.innerHTML = `<i class="fas fa-handshake"></i> ` + GameLang.t('drawMsg');
+            } else if (m.k === 'pcTurn') {
+                statusMsg.innerHTML = '<i class="fas fa-desktop"></i> ' + GameLang.t('pcTurn');
+            } else if (m.k === 'pcWin') {
+                statusMsg.innerHTML = '<i class="fas fa-desktop"></i> ' + GameLang.t('pcWins');
+            } else if (m.k === 'yourTurn') {
+                statusMsg.innerHTML = '<i class="fas fa-play"></i> ' + GameLang.t('yourTurn');
+            } else {
+                statusMsg.innerHTML = `<i class="fas fa-play"></i> ` + GameLang.t('turnMsg').replace('{t}', `<strong>${playerTag(currentPlayer)}</strong>`);
+            }
+        }
+
+        function renderBadge() {
+            const map = {
+                ready: ['badge-dot active', 'ready'],
+                waiting: ['badge-dot waiting', 'waiting'],
+                turnRed: ['badge-dot red', 'turnRed'],
+                turnYellow: ['badge-dot yellow', 'turnYellow'],
+                victory: ['badge-dot active', 'victory'],
+                draw: ['badge-dot waiting', 'drawB'],
+                defeat: ['badge-dot active', 'defeat'],
+                yourTurn: ['badge-dot red', 'yourTurn'],
+                pcTurn: ['badge-dot waiting', 'pcTurnB']
+            };
+            const entry = map[lastBadge] || map.ready;
+            statusDot.className = entry[0];
+            statusText.textContent = GameLang.t(entry[1]);
+        }
+
+        function updateStatus() {
+            if (!gameActive) return;
+            lastMsg = { k: 'turn', player: currentPlayer };
+            renderMsg();
+        }
+
+        function updateBadge() {
+            lastBadge = !gameActive ? 'waiting' : (currentPlayer === RED ? 'turnRed' : 'turnYellow');
+            renderBadge();
+        }
+
+        // ---------- RENDERIZADO ----------
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+
+                    const val = board[r][c];
+                    if (val === RED) cell.classList.add('red', 'taken');
+                    if (val === YELLOW) cell.classList.add('yellow', 'taken');
+
+                    // Marcar celdas ganadoras
+                    if (winCells.some(([wr, wc]) => wr === r && wc === c)) {
+                        cell.classList.add('win-cell');
+                    }
+
+                    cell.addEventListener('click', () => {
+                        const col = parseInt(cell.dataset.col);
+                        handleColumnClick(col);
+                    });
+
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        // ---------- LÓGICA DEL JUEGO ----------
+        function handleColumnClick(col) {
+            if (!gameActive) return;
+            if (gameMode === '1p' && currentPlayer === YELLOW) return;
+
+            const row = getLowestEmptyRow(col);
+            if (row === -1) return;
+
+            // Colocar ficha
+            board[row][col] = currentPlayer;
+            renderBoard();
+
+            // Verificar victoria
+            const winCombo = checkWin(row, col, currentPlayer);
+            if (winCombo) {
+                winCells = winCombo;
+                renderBoard();
+                scores[currentPlayer]++;
+                updateScores();
+                gameActive = false;
+                lastMsg = { k: 'win', player: currentPlayer };
+                renderMsg();
+                faceIcon.className = 'fas fa-star';
+                lastBadge = 'victory';
+                renderBadge();
+                return;
+            }
+
+            // Verificar empate
+            if (board.every(row => row.every(cell => cell !== EMPTY))) {
+                gameActive = false;
+                lastMsg = { k: 'draw' };
+                renderMsg();
+                faceIcon.className = 'fas fa-meh';
+                lastBadge = 'draw';
+                renderBadge();
+                return;
+            }
+
+            // Cambiar turno
+            currentPlayer = currentPlayer === RED ? YELLOW : RED;
+            updateStatus();
+            updateBadge();
+
+            // Turno del PC (modo 1 jugador, amarillas)
+            if (gameMode === '1p' && currentPlayer === YELLOW && gameActive) {
+                lastMsg = { k: 'pcTurn' };
+                renderMsg();
+                lastBadge = 'pcTurn';
+                renderBadge();
+                setTimeout(pcMove, 500);
+            }
+        }
+
+        function getLowestEmptyRow(col) {
+            for (let r = ROWS - 1; r >= 0; r--) {
+                if (board[r][col] === EMPTY) return r;
+            }
+            return -1;
+        }
+
+        // ---------- VERIFICAR VICTORIA ----------
+        function checkWin(row, col, player) {
+            const directions = [
+                [0, 1], [1, 0], [1, 1], [1, -1]
+            ];
+
+            for (let [dr, dc] of directions) {
+                let cells = [[row, col]];
+                // Dirección positiva
+                for (let i = 1; i < 4; i++) {
+                    const r = row + dr * i;
+                    const c = col + dc * i;
+                    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) break;
+                    if (board[r][c] === player) cells.push([r, c]);
+                    else break;
+                }
+                // Dirección negativa
+                for (let i = 1; i < 4; i++) {
+                    const r = row - dr * i;
+                    const c = col - dc * i;
+                    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) break;
+                    if (board[r][c] === player) cells.push([r, c]);
+                    else break;
+                }
+                if (cells.length >= 4) return cells;
+            }
+            return null;
+        }
+
+        // ---------- Rival ----------
+        function pcMove() {
+            if (!gameActive || currentPlayer !== YELLOW) return;
+
+            let bestScore = -Infinity;
+            let bestCol = -1;
+
+            for (let col = 0; col < COLS; col++) {
+                const row = getLowestEmptyRow(col);
+                if (row === -1) continue;
+
+                board[row][col] = YELLOW;
+                const score = minimax(board, 4, -Infinity, Infinity, false);
+                board[row][col] = EMPTY;
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestCol = col;
+                }
+            }
+
+            if (bestCol !== -1) {
+                const row = getLowestEmptyRow(bestCol);
+                if (row !== -1) {
+                    board[row][bestCol] = YELLOW;
+                    renderBoard();
+
+                    const winCombo = checkWin(row, bestCol, YELLOW);
+                    if (winCombo) {
+                        winCells = winCombo;
+                        renderBoard();
+                        scores[YELLOW]++;
+                        updateScores();
+                        gameActive = false;
+                        lastMsg = { k: 'pcWin' };
+                        renderMsg();
+                        faceIcon.className = 'fas fa-frown';
+                        lastBadge = 'defeat';
+                        renderBadge();
+                        return;
+                    }
+
+                    if (board.every(row => row.every(cell => cell !== EMPTY))) {
+                        gameActive = false;
+                        lastMsg = { k: 'draw' };
+                        renderMsg();
+                        faceIcon.className = 'fas fa-meh';
+                        lastBadge = 'draw';
+                        renderBadge();
+                        return;
+                    }
+
+                    currentPlayer = RED;
+                    updateStatus();
+                    updateBadge();
+                    lastMsg = { k: 'yourTurn' };
+                    renderMsg();
+                    lastBadge = 'yourTurn';
+                    renderBadge();
+                }
+            }
+        }
+
+        function minimax(boardArr, depth, alpha, beta, isMaximizing) {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (boardArr[r][c] !== EMPTY) {
+                        const win = checkWin(r, c, boardArr[r][c]);
+                        if (win) {
+                            if (boardArr[r][c] === YELLOW) return 1000 - depth;
+                            else return -1000 + depth;
+                        }
+                    }
+                }
+            }
+
+            if (boardArr.every(row => row.every(cell => cell !== EMPTY))) return 0;
+            if (depth === 0) return 0;
+
+            if (isMaximizing) {
+                let maxEval = -Infinity;
+                for (let col = 0; col < COLS; col++) {
+                    const row = lowestEmptyRowIn(boardArr, col);
+                    if (row === -1) continue;
+                    boardArr[row][col] = YELLOW;
+                    const eval_ = minimax(boardArr, depth - 1, alpha, beta, false);
+                    boardArr[row][col] = EMPTY;
+                    maxEval = Math.max(maxEval, eval_);
+                    alpha = Math.max(alpha, eval_);
+                    if (beta <= alpha) break;
+                }
+                return maxEval;
+            } else {
+                let minEval = Infinity;
+                for (let col = 0; col < COLS; col++) {
+                    const row = lowestEmptyRowIn(boardArr, col);
+                    if (row === -1) continue;
+                    boardArr[row][col] = RED;
+                    const eval_ = minimax(boardArr, depth - 1, alpha, beta, true);
+                    boardArr[row][col] = EMPTY;
+                    minEval = Math.min(minEval, eval_);
+                    beta = Math.min(beta, eval_);
+                    if (beta <= alpha) break;
+                }
+                return minEval;
+            }
+        }
+
+        function lowestEmptyRowIn(boardArr, col) {
+            for (let r = ROWS - 1; r >= 0; r--) {
+                if (boardArr[r][col] === EMPTY) return r;
+            }
+            return -1;
+        }
+
+        // ---------- REINICIO ----------
+        function resetGame() {
+            initGame();
+        }
+
+        // ---------- EVENTOS ----------
+        document.addEventListener('DOMContentLoaded', () => {
+            GameLang.init({
+                es: {
+                    title: 'Conecta 4', onePlayer: '1 Jugador', twoPlayers: '2 Jugadores',
+                    ready: 'Listo', waiting: 'Esperando...', turnRed: 'Turno Rojo',
+                    turnYellow: 'Turno Amarillo', victory: '¡Victoria!', drawB: 'Empate',
+                    defeat: 'Derrota', yourTurn: 'Tu turno', pcTurnB: 'Turno del PC...',
+                    redName: 'Rojo', yellowName: 'Amarillo',
+                    turnMsg: 'Turno de {t}', winMsg: '¡{t} ha ganado! 🎉',
+                    drawMsg: '¡Empate! 🤝', pcTurn: 'Turno del PC...', pcWins: '¡Gana el PC!'
+                },
+                en: {
+                    title: 'Connect 4', onePlayer: '1 Player', twoPlayers: '2 Players',
+                    ready: 'Ready', waiting: 'Waiting...', turnRed: 'Red turn',
+                    turnYellow: 'Yellow turn', victory: 'Victory!', drawB: 'Draw',
+                    defeat: 'Defeat', yourTurn: 'Your turn', pcTurnB: 'PC turn...',
+                    redName: 'Red', yellowName: 'Yellow',
+                    turnMsg: 'Turn: {t}', winMsg: '{t} wins! 🎉',
+                    drawMsg: 'Draw! 🤝', pcTurn: 'PC turn...', pcWins: 'PC wins!'
+                },
+                ja: {
+                    title: 'コネクト4', onePlayer: '1人', twoPlayers: '2人',
+                    ready: '準備OK', waiting: '待機中...', turnRed: '赤の番',
+                    turnYellow: '黄の番', victory: '勝利！', drawB: '引き分け',
+                    defeat: '負け', yourTurn: 'あなたの番', pcTurnB: 'PCの番...',
+                    redName: '赤', yellowName: '黄',
+                    turnMsg: '{t}の番', winMsg: '{t}の勝ち！🎉',
+                    drawMsg: '引き分け！🤝', pcTurn: 'PCの番...', pcWins: 'PCの勝ち！'
+                }
+            });
+            GameLang.onChange = () => {
+                document.title = GameLang.t('title') + ' · Campo de Gibraltar';
+                renderMsg();
+                renderBadge();
+            };
+            document.title = GameLang.t('title') + ' · Campo de Gibraltar';
+            initGame();
+
+            // Reset
+            resetBtn.addEventListener('click', resetScores);
+
+            // Cambiar modo
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    gameMode = btn.dataset.mode;
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    resetScores();
+                });
+            });
+
+            // Prevenir contexto
+            boardEl.addEventListener('contextmenu', (e) => e.preventDefault());
+        });
+
+    })();
+</script>
+</body>
+</html>

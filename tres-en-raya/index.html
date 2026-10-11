@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>❌ Tres en Raya · Campo de Gibraltar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(145deg, #1a1a2e 0%, #2a2a4a 100%);
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: 12px;
+            margin: 0;
+        }
+
+        .game-container {
+            background: rgba(30, 30, 50, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 40px;
+            padding: 20px 18px 24px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+        }
+
+        .game-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #e8eaf0;
+            font-weight: 400;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        .game-title i {
+            font-size: 1.6rem;
+        }
+
+        .game-title h1 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .score-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 14px 5px 16px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .score-box {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #d0d8e5;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .score-box i {
+            font-size: 1rem;
+        }
+
+        .score-box .score-value {
+            font-weight: 700;
+            font-size: 1rem;
+            min-width: 16px;
+            text-align: center;
+        }
+
+        .score-divider {
+            color: #4a5a6a;
+            font-weight: 300;
+        }
+
+        .reset-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: #d0d8e5;
+            font-size: 1.2rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.02);
+        }
+
+        .reset-btn:active {
+            transform: scale(0.92);
+        }
+
+        .board-wrapper {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 28px;
+            padding: 14px;
+            box-shadow: inset 0 6px 12px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            width: 100%;
+            max-width: 360px;
+            aspect-ratio: 1 / 1;
+        }
+
+        .cell {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.15s;
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            aspect-ratio: 1 / 1;
+            color: #e8eaf0;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .cell:hover:not(.taken) {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .cell:active:not(.taken) {
+            transform: scale(0.94);
+        }
+
+        .cell.taken {
+            cursor: default;
+        }
+
+        .cell.x {
+            color: #4a9af0;
+            text-shadow: 0 0 20px rgba(74, 154, 240, 0.3);
+        }
+
+        .cell.o {
+            color: #f0a040;
+            text-shadow: 0 0 20px rgba(240, 160, 64, 0.3);
+        }
+
+        .cell.win-cell {
+            background: rgba(74, 240, 120, 0.15) !important;
+            border-color: rgba(74, 240, 120, 0.3) !important;
+            animation: pulse-win 0.8s infinite alternate;
+        }
+
+        @keyframes pulse-win {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.04); }
+        }
+
+        .status-message {
+            text-align: center;
+            margin: 10px 0 6px;
+            font-size: 1rem;
+            color: #b0c4d4;
+            min-height: 28px;
+            letter-spacing: 0.3px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .mode-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #b0c4d4;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .mode-btn:active {
+            transform: scale(0.94);
+        }
+
+        .turn-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #a0b4c4;
+            font-size: 0.85rem;
+            font-weight: 400;
+        }
+
+        .turn-indicator .turn-icon {
+            font-size: 1.4rem;
+        }
+
+        @media (max-width: 480px) {
+            .game-container { padding: 14px 10px 18px; }
+            .board-wrapper { padding: 10px; }
+            .board { gap: 4px; max-width: 280px; }
+            .cell { font-size: 2.8rem; border-radius: 12px; }
+            .game-title h1 { font-size: 1.1rem; }
+            .score-box { font-size: 0.8rem; }
+        }
+
+        @media (max-width: 380px) {
+            .board { max-width: 220px; gap: 3px; }
+            .cell { font-size: 2rem; border-radius: 10px; }
+            .mode-btn { font-size: 0.65rem; padding: 3px 10px; }
+            .turn-indicator { font-size: 0.75rem; }
+        }
+    </style>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<div class="game-container" id="app">
+    <div class="game-header">
+        <div class="game-title">
+            <i class="fas fa-times" style="color:#4a9af0;"></i>
+            <h1 data-i18n="title">Tres en Raya</h1>
+        </div>
+        <div class="score-area">
+            <span class="score-box"><i class="fas fa-times" style="color:#4a9af0;"></i> <span class="score-value" id="xScore">0</span></span>
+            <span class="score-divider">|</span>
+            <span class="score-box"><i class="fas fa-circle" style="color:#f0a040;"></i> <span class="score-value" id="oScore">0</span></span>
+            <button class="reset-btn" id="resetBtn" data-i18n-aria="restart" aria-label="Reiniciar">
+                <i class="fas fa-rotate-right" id="faceIcon"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="board-wrapper">
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+    </div>
+
+    <div id="statusMessage" class="status-message">
+        <i class="fas fa-play"></i> Turno de <strong>X</strong>
+    </div>
+
+    <div class="controls">
+        <div class="mode-group">
+            <button class="mode-btn active" data-mode="1p" data-i18n="onePlayer">1 Jugador</button>
+            <button class="mode-btn" data-mode="2p" data-i18n="twoPlayers">2 Jugadores</button>
+        </div>
+        <div class="turn-indicator">
+            <span data-i18n="turn">Turno: </span>
+            <span class="turn-icon" id="turnIcon">❌</span>
+            <span id="turnText">X</span>
+        </div>
+    </div>
+</div>
+
+<script src="../_shared/game-lang.js"></script>
+<script>
+    (function() {
+        // ---------- CONFIGURACIÓN ----------
+        const boardEl = document.getElementById('board');
+        const cells = boardEl.querySelectorAll('.cell');
+        const xScoreEl = document.getElementById('xScore');
+        const oScoreEl = document.getElementById('oScore');
+        const statusMsg = document.getElementById('statusMessage');
+        const resetBtn = document.getElementById('resetBtn');
+        const faceIcon = document.getElementById('faceIcon');
+        const turnIcon = document.getElementById('turnIcon');
+        const turnText = document.getElementById('turnText');
+
+        let board = Array(9).fill(null);
+        let currentPlayer = 'X';
+        let gameActive = true;
+        let gameMode = '1p'; // '1p' o '2p'
+        let scores = { X: 0, O: 0 };
+        let winCells = [];
+        let lastEnd = null; // {type:'win',player} | {type:'draw'} para re-render ES/EN/JA
+
+        // ---------- COMBINACIONES GANADORAS ----------
+        const WIN_COMBOS = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        // ---------- INICIALIZACIÓN ----------
+        function resetGame() {
+            board = Array(9).fill(null);
+            currentPlayer = 'X';
+            gameActive = true;
+            winCells = [];
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.className = 'cell';
+            });
+            updateStatus();
+            updateTurnIndicator();
+            lastEnd = null;
+            if (gameMode === '1p' && currentPlayer === 'O') {
+                setTimeout(pcMove, 300);
+            }
+        }
+
+        function resetScores() {
+            scores = { X: 0, O: 0 };
+            updateScores();
+            resetGame();
+        }
+
+        function updateScores() {
+            xScoreEl.textContent = scores.X;
+            oScoreEl.textContent = scores.O;
+        }
+
+        function updateStatus() {
+            if (!gameActive) return;
+            statusMsg.innerHTML = `<i class="fas fa-play"></i> ` + GameLang.t('turnMsg').replace('{p}', `<strong>${currentPlayer}</strong>`);
+        }
+
+        function renderEnd() {
+            if (!lastEnd) return;
+            if (lastEnd.type === 'draw') {
+                statusMsg.innerHTML = `<i class="fas fa-handshake"></i> ${GameLang.t('draw')}`;
+            } else {
+                statusMsg.innerHTML = `<i class="fas fa-trophy"></i> ${GameLang.t('wins').replace('{p}', `<strong>${lastEnd.player}</strong>`)}`;
+            }
+        }
+
+        function updateTurnIndicator() {
+            if (currentPlayer === 'X') {
+                turnIcon.textContent = '❌';
+                turnIcon.style.color = '#4a9af0';
+                turnText.textContent = 'X';
+                turnText.style.color = '#4a9af0';
+            } else {
+                turnIcon.textContent = '⭕';
+                turnIcon.style.color = '#f0a040';
+                turnText.textContent = 'O';
+                turnText.style.color = '#f0a040';
+            }
+        }
+
+        // ---------- MOVIMIENTO ----------
+        function makeMove(index) {
+            if (!gameActive) return false;
+            if (board[index] !== null) return false;
+
+            board[index] = currentPlayer;
+            const cell = cells[index];
+            cell.textContent = currentPlayer === 'X' ? '✕' : '◯';
+            cell.classList.add('taken', currentPlayer === 'X' ? 'x' : 'o');
+
+            // Verificar victoria
+            const winCombo = checkWin(currentPlayer);
+            if (winCombo) {
+                winCells = winCombo;
+                winCombo.forEach(i => cells[i].classList.add('win-cell'));
+                scores[currentPlayer]++;
+                updateScores();
+                gameActive = false;
+                lastEnd = { type: 'win', player: currentPlayer };
+                renderEnd();
+                faceIcon.className = 'fas fa-star';
+                return true;
+            }
+
+            // Verificar empate
+            if (board.every(cell => cell !== null)) {
+                gameActive = false;
+                lastEnd = { type: 'draw' };
+                renderEnd();
+                faceIcon.className = 'fas fa-meh';
+                return true;
+            }
+
+            // Cambiar turno
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            updateStatus();
+            updateTurnIndicator();
+
+            // Turno del PC
+            if (gameMode === '1p' && currentPlayer === 'O' && gameActive) {
+                setTimeout(pcMove, 350);
+            }
+
+            return true;
+        }
+
+        // ---------- VERIFICAR VICTORIA ----------
+        function checkWin(player) {
+            for (let combo of WIN_COMBOS) {
+                if (combo.every(idx => board[idx] === player)) {
+                    return combo;
+                }
+            }
+            return null;
+        }
+
+        // ---------- Rival ----------
+        function pcMove() {
+            if (!gameActive) return;
+            if (currentPlayer !== 'O') return;
+
+            // Buscar mejor movimiento
+            let bestScore = -Infinity;
+            let bestMove = -1;
+
+            for (let i = 0; i < 9; i++) {
+                if (board[i] !== null) continue;
+                board[i] = 'O';
+                const score = minimax(board, 0, false);
+                board[i] = null;
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove = i;
+                }
+            }
+
+            if (bestMove !== -1) {
+                makeMove(bestMove);
+            }
+        }
+
+        function minimax(boardArr, depth, isMaximizing) {
+            const winnerX = checkWin('X');
+            const winnerO = checkWin('O');
+
+            if (winnerX) return -10 + depth;
+            if (winnerO) return 10 - depth;
+            if (boardArr.every(cell => cell !== null)) return 0;
+
+            if (isMaximizing) {
+                let best = -Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (boardArr[i] !== null) continue;
+                    boardArr[i] = 'O';
+                    const score = minimax(boardArr, depth + 1, false);
+                    boardArr[i] = null;
+                    best = Math.max(best, score);
+                }
+                return best;
+            } else {
+                let best = Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (boardArr[i] !== null) continue;
+                    boardArr[i] = 'X';
+                    const score = minimax(boardArr, depth + 1, true);
+                    boardArr[i] = null;
+                    best = Math.min(best, score);
+                }
+                return best;
+            }
+        }
+
+        // ---------- EVENTOS ----------
+        document.addEventListener('DOMContentLoaded', () => {
+            GameLang.init({
+                es: {
+                    title: 'Tres en Raya', onePlayer: '1 Jugador', twoPlayers: '2 Jugadores',
+                    turn: 'Turno: ', turnMsg: 'Turno de {p}',
+                    wins: '¡{p} ha ganado! 🎉', draw: '¡Empate! 🤝', restart: 'Reiniciar'
+                },
+                en: {
+                    title: 'Tic-Tac-Toe', onePlayer: '1 Player', twoPlayers: '2 Players',
+                    turn: 'Turn: ', turnMsg: 'Turn: {p}',
+                    wins: '{p} wins! 🎉', draw: 'Draw! 🤝', restart: 'Restart'
+                },
+                ja: {
+                    title: '三目並べ', onePlayer: '1人', twoPlayers: '2人',
+                    turn: '番：', turnMsg: '{p}の番',
+                    wins: '{p}の勝ち！🎉', draw: '引き分け！🤝', restart: 'リスタート'
+                }
+            });
+            GameLang.onChange = () => {
+                document.title = GameLang.t('title') + ' · Campo de Gibraltar';
+                if (gameActive) updateStatus();
+                else renderEnd();
+            };
+            document.title = GameLang.t('title') + ' · Campo de Gibraltar';
+            resetGame();
+
+            // Clic en celdas
+            cells.forEach(cell => {
+                cell.addEventListener('click', () => {
+                    const index = parseInt(cell.dataset.index);
+                    if (gameMode === '1p' && currentPlayer === 'O') return;
+                    makeMove(index);
+                });
+            });
+
+            // Reset
+            resetBtn.addEventListener('click', resetScores);
+
+            // Cambiar modo
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    gameMode = btn.dataset.mode;
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    resetScores();
+                });
+            });
+
+            // Prevenir contexto
+            boardEl.addEventListener('contextmenu', (e) => e.preventDefault());
+        });
+
+    })();
+</script>
+</body>
+</html>

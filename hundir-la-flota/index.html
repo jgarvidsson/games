@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🚢 Hundir la Flota · Campo de Gibraltar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(145deg, #0a1a2a 0%, #1a3a4a 100%);
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: 12px;
+            margin: 0;
+        }
+
+        .game-container {
+            background: rgba(20, 40, 55, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 40px;
+            padding: 20px 18px 24px;
+            max-width: 680px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+        }
+
+        .game-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #d0e0e8;
+            font-weight: 400;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        .game-title i {
+            font-size: 1.6rem;
+            color: #5a9ac0;
+        }
+
+        .game-title h1 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .score-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 14px 5px 16px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .score-box {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #b0c8d8;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .score-box i {
+            font-size: 1rem;
+        }
+
+        .score-box .score-value {
+            font-weight: 700;
+            font-size: 1rem;
+            min-width: 16px;
+            text-align: center;
+        }
+
+        .reset-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: #b0c8d8;
+            font-size: 1.2rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.02);
+        }
+
+        .reset-btn:active {
+            transform: scale(0.92);
+        }
+
+        .panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 8px 0 6px;
+        }
+
+        .panel {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 20px;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .panel-title {
+            text-align: center;
+            color: #8aacb8;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 2px;
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1 / 1;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: 0.1s;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        .grid-cell:hover:not(.hit):not(.miss):not(.ship-placed) {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .grid-cell.ship-placed {
+            background: rgba(74, 154, 200, 0.25);
+            border-color: rgba(74, 154, 200, 0.1);
+        }
+
+        .grid-cell.hit {
+            background: rgba(255, 60, 60, 0.5);
+            border-color: rgba(255, 60, 60, 0.3);
+            cursor: default;
+            animation: hit-anim 0.3s ease;
+        }
+
+        .grid-cell.hit::after {
+            content: '✕';
+            color: #ff6a6a;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .grid-cell.miss {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.02);
+            cursor: default;
+        }
+
+        .grid-cell.miss::after {
+            content: '·';
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 1.2rem;
+        }
+
+        .grid-cell.enemy-cell {
+            cursor: pointer;
+        }
+
+        .grid-cell.enemy-cell:hover:not(.hit):not(.miss) {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        @keyframes hit-anim {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .status-message {
+            text-align: center;
+            margin: 8px 0 6px;
+            font-size: 0.95rem;
+            color: #b0c8d8;
+            min-height: 28px;
+            letter-spacing: 0.3px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .mode-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #b0c8d8;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .mode-btn:active {
+            transform: scale(0.94);
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #8aacb8;
+            font-size: 0.8rem;
+        }
+
+        .status-badge i {
+            font-size: 1rem;
+        }
+
+        .status-badge .badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .badge-dot.active {
+            background: #5ac87a;
+            box-shadow: 0 0 8px rgba(90, 200, 122, 0.3);
+        }
+
+        .badge-dot.waiting {
+            background: #c8a040;
+            box-shadow: 0 0 8px rgba(200, 160, 64, 0.3);
+            animation: pulse-dot 1s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        @media (max-width: 580px) {
+            .game-container { padding: 14px 10px 18px; }
+            .panels { grid-template-columns: 1fr; gap: 12px; }
+            .grid { max-width: 220px; }
+            .grid-cell { font-size: 0.5rem; }
+            .game-title h1 { font-size: 1.1rem; }
+            .score-box { font-size: 0.8rem; }
+        }
+
+        @media (max-width: 380px) {
+            .grid { max-width: 180px; gap: 1px; }
+            .grid-cell { border-radius: 2px; }
+            .mode-btn { font-size: 0.65rem; padding: 3px 10px; }
+        }
+    </style>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<div class="game-container" id="app">
+    <div class="game-header">
+        <div class="game-title">
+            <i class="fas fa-ship"></i>
+            <h1 data-i18n="title">Hundir la Flota</h1>
+        </div>
+        <div class="score-area">
+            <span class="score-box"><i class="fas fa-user"></i> <span class="score-value" id="playerScore">0</span></span>
+            <span class="score-divider" style="color:#4a6a7a;">|</span>
+            <span class="score-box"><i class="fas fa-desktop"></i> <span class="score-value" id="enemyScore">0</span></span>
+            <button class="reset-btn" id="resetBtn" aria-label="Reiniciar">
+                <i class="fas fa-rotate-right" id="faceIcon"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="panels">
+        <div class="panel">
+            <div class="panel-title"><i class="fas fa-user"></i> <span data-i18n="yourFleet">Tu flota</span></div>
+            <div class="grid" id="playerGrid"></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title"><i class="fas fa-crosshairs"></i> <span data-i18n="shots">Disparos</span></div>
+            <div class="grid" id="enemyGrid"></div>
+        </div>
+    </div>
+
+    <div id="statusMessage" class="status-message">
+        <i class="fas fa-ship"></i> Coloca tus barcos...
+    </div>
+
+    <div class="controls">
+        <div class="mode-group">
+            <button class="mode-btn active" data-mode="1p" data-i18n="onePlayer">1 Jugador</button>
+            <button class="mode-btn" data-mode="2p" data-i18n="twoPlayers">2 Jugadores</button>
+        </div>
+        <div class="status-badge">
+            <span class="badge-dot active" id="statusDot"></span>
+            <span id="statusText">Listo</span>
+        </div>
+    </div>
+</div>
+
+<script src="../_shared/game-lang.js"></script>
+<script>
+    (function() {
+        // ---------- CONFIGURACIÓN ----------
+        const SIZE = 10;
+        const SHIPS = [
+            { name: 'Portaaviones', ja: '空母', size: 5, count: 1 },
+            { name: 'Acorazado', ja: '戦艦', size: 4, count: 1 },
+            { name: 'Crucero', ja: '巡洋艦', size: 3, count: 2 },
+            { name: 'Destructor', ja: '駆逐艦', size: 2, count: 1 }
+        ];
+
+        // DOM
+        const playerGridEl = document.getElementById('playerGrid');
+        const enemyGridEl = document.getElementById('enemyGrid');
+        const statusMsg = document.getElementById('statusMessage');
+        const resetBtn = document.getElementById('resetBtn');
+        const faceIcon = document.getElementById('faceIcon');
+        const playerScoreEl = document.getElementById('playerScore');
+        const enemyScoreEl = document.getElementById('enemyScore');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+
+        // Estado del juego
+        let gameMode = '1p';
+        let playerBoard = [];
+        let enemyBoard = [];
+        let playerShips = [];
+        let enemyShips = [];
+        let playerHits = [];
+        let enemyHits = [];
+        let gameActive = false;
+        let playerTurn = true;
+        let placementPhase = true;
+        let currentShipIndex = 0;
+        let placedShips = [];
+        let playerScore = 0;
+        let enemyScore = 0;
+
+        // Mensaje + insignia (re-render al cambiar ES/EN/JA)
+        let lastMsg = { k: 'place' };
+        let lastBadge = 'placing';
+
+        function shipName(s) {
+            return (GameLang.lang === 'ja' && s.ja) ? s.ja : s.name;
+        }
+
+        function renderMsg() {
+            const m = lastMsg;
+            const T = (k) => GameLang.t(k);
+            if (m.k === 'ready') {
+                statusMsg.innerHTML = '<i class="fas fa-play"></i> ' + T('fleetReady');
+            } else if (m.k === 'nextShip') {
+                const s = SHIPS[currentShipIndex];
+                statusMsg.innerHTML = `<i class="fas fa-ship"></i> ` + T('placeNext').replace('{n}', shipName(s)).replace('{s}', s.size);
+            } else if (m.k === 'sunk') {
+                statusMsg.innerHTML = `<i class="fas fa-bomb"></i> ` + T('sunk').replace('{n}', shipName(m.ship));
+            } else if (m.k === 'hit') {
+                statusMsg.innerHTML = `<i class="fas fa-bolt"></i> ` + T('hit');
+            } else if (m.k === 'win') {
+                statusMsg.innerHTML = '<i class="fas fa-trophy"></i> ' + T('win');
+            } else if (m.k === 'water') {
+                statusMsg.innerHTML = `<i class="fas fa-water"></i> ` + T('water');
+            } else if (m.k === 'pcSunk') {
+                statusMsg.innerHTML = `<i class="fas fa-skull"></i> ` + T('pcSunk').replace('{n}', shipName(m.ship));
+            } else if (m.k === 'pcHit') {
+                statusMsg.innerHTML = `<i class="fas fa-bolt"></i> ` + T('pcHit');
+            } else if (m.k === 'defeat') {
+                statusMsg.innerHTML = '<i class="fas fa-skull"></i> ' + T('defeat');
+            } else if (m.k === 'pcMiss') {
+                statusMsg.innerHTML = `<i class="fas fa-water"></i> ` + T('pcMiss');
+            } else if (m.k === 'yourTurn') {
+                statusMsg.innerHTML = '<i class="fas fa-play"></i> ' + T('yourTurn');
+            } else if (m.k === 'p2turn') {
+                statusMsg.innerHTML = '<i class="fas fa-users"></i> ' + T('p2turn');
+            } else {
+                statusMsg.innerHTML = '<i class="fas fa-ship"></i> ' + T('placeShips');
+            }
+        }
+
+        function renderBadge() {
+            const map = {
+                placing: ['badge-dot waiting', 'placing'],
+                yourTurn: ['badge-dot active', 'yourTurn'],
+                thinking: ['badge-dot waiting', 'thinking'],
+                victory: ['badge-dot active', 'victory'],
+                defeat: ['badge-dot active', 'defeat']
+            };
+            const entry = map[lastBadge] || map.placing;
+            statusDot.className = entry[0];
+            statusText.textContent = GameLang.t(entry[1]);
+        }
+
+        // ---------- INICIALIZACIÓN ----------
+        function initGame() {
+            playerBoard = createEmptyBoard();
+            enemyBoard = createEmptyBoard();
+            playerShips = [];
+            enemyShips = [];
+            playerHits = [];
+            enemyHits = [];
+            playerScore = 0;
+            enemyScore = 0;
+            gameActive = false;
+            placementPhase = true;
+            currentShipIndex = 0;
+            placedShips = [];
+            updateScores();
+            renderGrids();
+            lastMsg = { k: 'place' };
+            renderMsg();
+            lastBadge = 'placing';
+            renderBadge();
+            faceIcon.className = 'fas fa-rotate-right';
+
+            // Generar barcos enemigos
+            generateEnemyShips();
+        }
+
+        function createEmptyBoard() {
+            return Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
+        }
+
+        // ---------- GENERAR BARCOS ENEMIGOS ----------
+        function generateEnemyShips() {
+            enemyShips = [];
+            const board = createEmptyBoard();
+            for (let ship of SHIPS) {
+                for (let i = 0; i < ship.count; i++) {
+                    let placed = false;
+                    let attempts = 0;
+                    while (!placed && attempts < 100) {
+                        attempts++;
+                        const horizontal = Math.random() > 0.5;
+                        const row = Math.floor(Math.random() * SIZE);
+                        const col = Math.floor(Math.random() * SIZE);
+                        if (canPlaceShip(board, row, col, ship.size, horizontal)) {
+                            placeShip(board, row, col, ship.size, horizontal);
+                            enemyShips.push({
+                                row, col, size: ship.size, horizontal,
+                                hits: 0, sunk: false, name: ship.name
+                            });
+                            placed = true;
+                        }
+                    }
+                }
+            }
+            enemyBoard = board;
+        }
+
+        function canPlaceShip(board, row, col, size, horizontal) {
+            if (horizontal) {
+                if (col + size > SIZE) return false;
+                for (let i = 0; i < size; i++) {
+                    if (board[row][col + i] !== null) return false;
+                }
+            } else {
+                if (row + size > SIZE) return false;
+                for (let i = 0; i < size; i++) {
+                    if (board[row + i][col] !== null) return false;
+                }
+            }
+            return true;
+        }
+
+        function placeShip(board, row, col, size, horizontal) {
+            if (horizontal) {
+                for (let i = 0; i < size; i++) {
+                    board[row][col + i] = 'S';
+                }
+            } else {
+                for (let i = 0; i < size; i++) {
+                    board[row + i][col] = 'S';
+                }
+            }
+        }
+
+        // ---------- COLOCAR BARCOS DEL JUGADOR ----------
+        function placePlayerShip(row, col) {
+            if (!placementPhase) return;
+            if (currentShipIndex >= SHIPS.length) return;
+
+            const ship = SHIPS[currentShipIndex];
+            // Buscar si ya hay un barco de este tipo colocado
+            let placedCount = 0;
+            for (let s of placedShips) {
+                if (s.name === ship.name) placedCount++;
+            }
+            if (placedCount >= ship.count) {
+                currentShipIndex++;
+                return;
+            }
+
+            // Intentar colocar (horizontal por defecto)
+            const horizontal = true;
+            if (canPlaceShip(playerBoard, row, col, ship.size, horizontal)) {
+                placeShip(playerBoard, row, col, ship.size, horizontal);
+                playerShips.push({
+                    row, col, size: ship.size, horizontal,
+                    hits: 0, sunk: false, name: ship.name
+                });
+                placedShips.push({ name: ship.name });
+                renderGrids();
+
+                // Verificar si ya se colocaron todos
+                let totalPlaced = 0;
+                for (let s of SHIPS) {
+                    let count = 0;
+                    for (let ps of placedShips) {
+                        if (ps.name === s.name) count++;
+                    }
+                    if (count >= s.count) totalPlaced++;
+                }
+
+                if (totalPlaced >= SHIPS.length) {
+                    placementPhase = false;
+                    gameActive = true;
+                    playerTurn = true;
+                    lastMsg = { k: 'ready' };
+                    renderMsg();
+                    lastBadge = 'yourTurn';
+                    renderBadge();
+                    renderGrids();
+                } else {
+                    lastMsg = { k: 'nextShip' };
+                    renderMsg();
+                }
+                return true;
+            }
+            return false;
+        }
+
+        // ---------- DISPARAR ----------
+        function fireAtEnemy(row, col) {
+            if (!gameActive || !playerTurn || placementPhase) return false;
+            if (enemyBoard[row][col] === 'H' || enemyBoard[row][col] === 'M') return false;
+
+            if (enemyBoard[row][col] === 'S') {
+                enemyBoard[row][col] = 'H';
+                // Buscar barco
+                for (let ship of enemyShips) {
+                    if (isShipHit(ship, row, col)) {
+                        ship.hits++;
+                        if (ship.hits >= ship.size) {
+                            ship.sunk = true;
+                            lastMsg = { k: 'sunk', ship: ship };
+                            renderMsg();
+                            playerScore += 10;
+                            updateScores();
+                            // Marcar todo el barco
+                            markShipSunk(enemyBoard, ship);
+                        } else {
+                            lastMsg = { k: 'hit' };
+                            renderMsg();
+                        }
+                        break;
+                    }
+                }
+                renderGrids();
+                // Verificar si se han hundido todos
+                if (enemyShips.every(s => s.sunk)) {
+                    gameActive = false;
+                    lastMsg = { k: 'win' };
+                    renderMsg();
+                    lastBadge = 'victory';
+                    renderBadge();
+                    faceIcon.className = 'fas fa-star';
+                    return true;
+                }
+                playerTurn = false;
+                lastBadge = 'thinking';
+                renderBadge();
+                setTimeout(enemyTurn, 600);
+                return true;
+            } else {
+                enemyBoard[row][col] = 'M';
+                renderGrids();
+                lastMsg = { k: 'water' };
+                renderMsg();
+                playerTurn = false;
+                lastBadge = 'thinking';
+                renderBadge();
+                setTimeout(enemyTurn, 600);
+                return true;
+            }
+        }
+
+        function isShipHit(ship, row, col) {
+            if (ship.horizontal) {
+                return row === ship.row && col >= ship.col && col < ship.col + ship.size;
+            } else {
+                return col === ship.col && row >= ship.row && row < ship.row + ship.size;
+            }
+        }
+
+        function markShipSunk(board, ship) {
+            if (ship.horizontal) {
+                for (let i = 0; i < ship.size; i++) {
+                    board[ship.row][ship.col + i] = 'H';
+                }
+            } else {
+                for (let i = 0; i < ship.size; i++) {
+                    board[ship.row + i][ship.col] = 'H';
+                }
+            }
+        }
+
+        // ---------- Turno del PC ----------
+        function enemyTurn() {
+            if (!gameActive) return;
+            if (playerTurn) return;
+            if (gameMode === '2p') {
+                // En modo 2 jugadores, esperar clic en el tablero enemigo
+                lastMsg = { k: 'p2turn' };
+                renderMsg();
+                playerTurn = true;
+                lastBadge = 'yourTurn';
+                renderBadge();
+                renderGrids();
+                return;
+            }
+
+            // Disparos del PC en casillas aleatorias
+            let attempts = 0;
+            let fired = false;
+            while (!fired && attempts < 100) {
+                attempts++;
+                const row = Math.floor(Math.random() * SIZE);
+                const col = Math.floor(Math.random() * SIZE);
+                if (playerBoard[row][col] !== 'H' && playerBoard[row][col] !== 'M') {
+                    if (playerBoard[row][col] === 'S') {
+                        playerBoard[row][col] = 'H';
+                        // Buscar barco
+                        for (let ship of playerShips) {
+                            if (isShipHit(ship, row, col)) {
+                                ship.hits++;
+                                if (ship.hits >= ship.size) {
+                                    ship.sunk = true;
+                                    lastMsg = { k: 'pcSunk', ship: ship };
+                                    renderMsg();
+                                    enemyScore += 10;
+                                    updateScores();
+                                    markShipSunk(playerBoard, ship);
+                                } else {
+                                    lastMsg = { k: 'pcHit' };
+                                    renderMsg();
+                                }
+                                break;
+                            }
+                        }
+                        renderGrids();
+                        if (playerShips.every(s => s.sunk)) {
+                            gameActive = false;
+                            lastMsg = { k: 'defeat' };
+                            renderMsg();
+                            lastBadge = 'defeat';
+                            renderBadge();
+                            faceIcon.className = 'fas fa-frown';
+                            return;
+                        }
+                        playerTurn = true;
+                        lastBadge = 'yourTurn';
+                        renderBadge();
+                        lastMsg = { k: 'yourTurn' };
+                        renderMsg();
+                        fired = true;
+                    } else {
+                        playerBoard[row][col] = 'M';
+                        renderGrids();
+                        lastMsg = { k: 'pcMiss' };
+                        renderMsg();
+                        playerTurn = true;
+                        lastBadge = 'yourTurn';
+                        renderBadge();
+                        fired = true;
+                    }
+                }
+            }
+            if (!fired) {
+                playerTurn = true;
+                lastBadge = 'yourTurn';
+                renderBadge();
+            }
+            renderGrids();
+        }
+
+        // ---------- RENDERIZADO ----------
+        function renderGrids() {
+            renderGrid(playerGridEl, playerBoard, true);
+            renderGrid(enemyGridEl, enemyBoard, false);
+        }
+
+        function renderGrid(gridEl, board, isPlayer) {
+            gridEl.innerHTML = '';
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+
+                    const val = board[r][c];
+                    if (val === 'S' && isPlayer) {
+                        cell.classList.add('ship-placed');
+                    }
+                    if (val === 'H') {
+                        cell.classList.add('hit');
+                    }
+                    if (val === 'M') {
+                        cell.classList.add('miss');
+                    }
+
+                    if (!isPlayer && gameActive && !placementPhase) {
+                        cell.classList.add('enemy-cell');
+                        cell.addEventListener('click', () => {
+                            if (playerTurn && !placementPhase) {
+                                const row = parseInt(cell.dataset.row);
+                                const col = parseInt(cell.dataset.col);
+                                fireAtEnemy(row, col);
+                            }
+                        });
+                    }
+
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        function updateScores() {
+            playerScoreEl.textContent = playerScore;
+            enemyScoreEl.textContent = enemyScore;
+        }
+
+        // ---------- REINICIO ----------
+        function resetGame() {
+            initGame();
+            renderGrids();
+        }
+
+        // ---------- EVENTOS ----------
+        document.addEventListener('DOMContentLoaded', () => {
+            GameLang.init({
+                es: {
+                    title: 'Hundir la Flota', yourFleet: 'Tu flota', shots: 'Disparos',
+                    onePlayer: '1 Jugador', twoPlayers: '2 Jugadores',
+                    placing: 'Colocando...', yourTurn: 'Tu turno', thinking: 'Pensando...',
+                    victory: '¡Victoria!', defeat: 'Derrota',
+                    placeShips: 'Coloca tus barcos (clic en tu tablero)',
+                    fleetReady: '¡Flota lista! Turno del jugador',
+                    placeNext: 'Coloca: {n} ({s})',
+                    sunk: '¡Has hundido un {n}! 💥', hit: '¡Tocado!',
+                    win: '¡Has ganado la partida! 🎉', water: 'Agua...',
+                    pcSunk: '¡El PC ha hundido tu {n}! 😅', pcHit: '¡El PC te ha tocado!',
+                    pcMiss: 'El PC ha fallado...', p2turn: 'Turno del jugador 2 (O)'
+                },
+                en: {
+                    title: 'Battleships', yourFleet: 'Your fleet', shots: 'Shots',
+                    onePlayer: '1 Player', twoPlayers: '2 Players',
+                    placing: 'Placing...', yourTurn: 'Your turn', thinking: 'Thinking...',
+                    victory: 'Victory!', defeat: 'Defeat',
+                    placeShips: 'Place your ships (click your board)',
+                    fleetReady: 'Fleet ready! Your turn',
+                    placeNext: 'Place: {n} ({s})',
+                    sunk: 'You sunk a {n}! 💥', hit: 'Hit!',
+                    win: 'You won the game! 🎉', water: 'Miss...',
+                    pcSunk: 'The PC sunk your {n}! 😅', pcHit: 'The PC hit you!',
+                    pcMiss: 'The PC missed...', p2turn: 'Player 2 turn (O)'
+                },
+                ja: {
+                    title: 'バトルシップ', yourFleet: 'あなたの艦隊', shots: '攻撃',
+                    onePlayer: '1人', twoPlayers: '2人',
+                    placing: '配置中...', yourTurn: 'あなたの番', thinking: '考え中...',
+                    victory: '勝利！', defeat: '負け',
+                    placeShips: '船をクリックで配置',
+                    fleetReady: '艦隊準備完了！あなたの番',
+                    placeNext: '配置：{n}（{s}）',
+                    sunk: '{n}を撃沈！💥', hit: '命中！',
+                    win: '勝利！🎉', water: 'はずれ...',
+                    pcSunk: 'PCがあなたの{n}を撃沈！😅', pcHit: 'PCに命中された！',
+                    pcMiss: 'PCははずした...', p2turn: '2人目の番'
+                }
+            });
+            GameLang.onChange = () => {
+                document.title = GameLang.t('title') + ' · Campo de Gibraltar';
+                renderMsg();
+                renderBadge();
+            };
+            document.title = GameLang.t('title') + ' · Campo de Gibraltar';
+            initGame();
+
+            // Colocar barcos en el tablero del jugador
+            playerGridEl.addEventListener('click', (e) => {
+                const cell = e.target.closest('.grid-cell');
+                if (!cell) return;
+                if (!placementPhase) return;
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                placePlayerShip(row, col);
+            });
+
+            // Reset
+            resetBtn.addEventListener('click', resetGame);
+
+            // Modo
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    gameMode = btn.dataset.mode;
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    resetGame();
+                });
+            });
+
+            // Prevenir contexto
+            document.querySelectorAll('.grid').forEach(g => {
+                g.addEventListener('contextmenu', (e) => e.preventDefault());
+            });
+        });
+
+    })();
+</script>
+</body>
+</html>
