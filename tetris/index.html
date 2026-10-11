@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🧩 Tetris · Campo de Gibraltar</title>
+    <title>🧩 Tetris</title>
     <style>
         * {
             margin: 0;
@@ -758,10 +758,10 @@
                 }
             });
             GameLang.onChange = () => {
-                document.title = GameLang.t('title') + ' · Campo de Gibraltar';
+                document.title = GameLang.t('title');
                 renderStatus();
             };
-            document.title = GameLang.t('title') + ' · Campo de Gibraltar';
+            document.title = GameLang.t('title');
             initGame(500, 1);
 
             // Teclado
