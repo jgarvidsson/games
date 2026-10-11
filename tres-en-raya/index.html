@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>❌ Tres en Raya · Campo de Gibraltar</title>
+    <title>❌ Tres en Raya</title>
     <style>
         * {
             margin: 0;
@@ -544,11 +544,11 @@
                 }
             });
             GameLang.onChange = () => {
-                document.title = GameLang.t('title') + ' · Campo de Gibraltar';
+                document.title = GameLang.t('title');
                 if (gameActive) updateStatus();
                 else renderEnd();
             };
-            document.title = GameLang.t('title') + ' · Campo de Gibraltar';
+            document.title = GameLang.t('title');
             resetGame();
 
             // Clic en celdas
